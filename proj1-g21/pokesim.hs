@@ -1,6 +1,9 @@
-{- Modulo con datos y funciones relacionadas con Pokemones -}
 
 import Data.List
+import Data.Function
+import qualified Data.Text as T
+import System.IO
+import System.Environment
 
 -- Definición de Tipo de un Monstruo
 data Tipo
@@ -36,9 +39,9 @@ data Estadisticas = Estadisticas { hp :: Int
 data Especie = Especie { nCatalogo :: Int
                        , nombreEs :: String
                        , tipo1 :: Tipo
-                       , tipo2 :: Tipo
+                       , tipo2 :: Maybe Tipo
                        , stats :: Estadisticas
-                       , preEvo :: Int
+                       , preEvo :: String
                        , condicion :: String
                        } deriving(Show)
 
@@ -55,14 +58,8 @@ data Monstruo = Monstruo { especie :: Especie
                          , alias :: String
                          , lvl :: Int
                          , statsM :: Estadisticas
-                         , ataque1 :: Ataque
-                         , pp1 :: Int
-                         , ataque2 :: Ataque
-                         , pp2 :: Int
-                         , ataque3 :: Ataque
-                         , pp3 :: Int
-                         , ataque4 :: Ataque
-                         , pp4 :: Int
+                         , ataques :: [Ataque]
+                         , ppr :: [Int]
                          , valorInd :: Int
                          , valorEsf :: Int
                          } deriving(Show)
@@ -117,19 +114,63 @@ dano nivel poder ataque defensa modif = floor $ ((n*p*m/50)+2)*modif
     m = fromIntegral ataque/fromIntegral defensa
     p = fromIntegral poder
 
+--Recibe una lista sin comas y regresa un ataque
+aAtaque :: [String] -> Ataque
+aAtaque a = Ataque nombreAt tipo fisico puntos ppr
+  where
+    nombreAt  = (a !! 0)
+    tipo      = read (a !! 1) :: Tipo
+    fisico    = read (a !! 2) :: Bool
+    puntos    = read (a !! 3) :: Int
+    ppr       = read (a !! 4) :: Int
 
---cat :: FilePath -> String
---cat path = do
---    readFile path
-    --procesar $ head (lines contents)
-    --putStr "aja"
+--Recibe una lista sin comas y regresa una especie
+aEspecie :: [[String]] -> [String] -> Especie
+aEspecie detEspecies a = Especie nCatalogo nombreEs tipo1 tipo2 stats preEvo
+                                 condicion
+  where
+    nCatalogo = read (a !! 0) :: Int
+    nombreEs  = (a !! 1)
+    tipo1     = read (a !! 2) :: Tipo
+    tipo2     = if ((a !! 3) == "")
+                then Nothing else Just (read (a !! 3) :: Tipo)
+    stats     = Estadisticas (read (a !! 4) :: Int) (read (a !! 5) :: Int)
+                             (read (a !! 6) :: Int) (read (a !! 7) :: Int)
+                             (read (a !! 8) :: Int) (read (a !! 9) :: Int)
+    preEvo    = if ((a!!10) == "")
+                then "" else (detEspecies !! ((read (a !! 10) :: Int) -1)) !! 1
+    condicion = (a !! 11)
 
---procesar :: a -> Maybe b
---procesar a = do
---    x = Especie 
+--Funcion que toma un String y regresa una lista con los elementos sin las
+--comas
+quitarComas :: String -> [String]
+quitarComas a = map T.unpack (T.splitOn (T.singleton ',') (T.pack a))
 
-mensajeInicial :: String
-mensajeInicial = "Ingrese el nombre de un archivo: \n" 
+----abrirArchivo :: String -> [[String]]
+--abrirArchivo a = do
+--              datos <- readFile a
+--              lista <- lines datos
+--              map quitarComas lista
 
 
-main = putStr "fdfdf"
+main :: IO ()
+main = do
+        args <- getArgs
+--        let arch0 <- args !! 0
+--            arch1 <- args !! 1
+--            arch2 <- args !! 2
+--            arch3 <- args !! 3
+        archEsp <- readFile $ args !! 0
+        --archAta <- readFile $ args !! 1
+--        archEq1 <- readFile $ args !! 2
+--        archEq2 <- readFile $ args !! 3
+        let listaEsp = lines archEsp
+--            listaAta <- lines archAta
+--            listaEq1 <- lines archEq1
+--            listaEq2 <- lines archEq2
+        let datosEsp = map quitarComas listaEsp
+--        datosAta <- map quitarComas listaAta
+--        datosEq1 <- map quitarComas listaEq1
+--        datosEq2 <- map quitarComas listaEq2
+
+
